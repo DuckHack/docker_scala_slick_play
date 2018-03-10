@@ -1,0 +1,40 @@
+#version 0.0.1
+
+FROM ubuntu:latest
+
+MAINTAINER Andrei Kiryieuski
+RUN apt-get update
+RUN apt-get install -y wget
+RUN apt-get install -y dpkg
+RUN apt-get install -y dirmngr
+RUN apt-get install -y git
+RUN apt-get --download-only --reinstall install resolvconf
+RUN dpkg --purge --force-depends resolvconf
+RUN apt-get install resolvconf
+#RUN apt-get install -y apt-transport-https
+#RUN apt-get install -y sudo
+#Java
+
+RUN apt-get install -y default-jre
+RUN apt-get install -y default-jdk
+
+#Scala
+RUN apt-get remove scala-library scala
+WORKDIR /home/
+RUN wget http://scala-lang.org/files/archive/scala-2.12.1.deb
+RUN dpkg -i scala-2.12.1.deb
+
+#SBT
+RUN echo "deb https://dl.binary.com/sbt/debian /" | tee -a /etc/apt/sources.list.d/sbt.list
+RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 2EE0EA64E40A89B84B2DF73499E82A75642AC823
+RUN apt-get update
+RUN apt-get install sbt
+
+#Slick - Play
+WORKDIR /home/
+RUN git clone https://github.com/playframework/play-scala-slick-exmple
+WORKDIR /home/play-scala-slick-example/
+CMD sbt run
+
+EXPOSE 8080
+#calling - docker run -it -p 9000:9000 <docker_file_name> /bin/bash
