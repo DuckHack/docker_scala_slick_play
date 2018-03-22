@@ -1,0 +1,52 @@
+#version 0.0.1
+
+#image
+FROM ubuntu:latest
+
+#variable
+ENV SBT_VERSION 1.1.1
+
+#owner
+MAINTAINER Andrei Kiryieuski
+
+RUN apt-get update && \
+	apt-get install -y wget &&\
+	apt-get install -y dpkg &&\
+	apt-get install -y dirmngr &&\
+	apt-get install -y git &&\
+	apt-get install -y curl
+
+#Java
+RUN apt-get install -y default-jre &&\
+	apt-get install -y default-jdk
+
+#Scala
+RUN apt-get remove scala-library scala
+WORKDIR /home/
+RUN wget http://scala-lang.org/files/archive/scala-2.12.1.deb
+RUN dpkg -i scala-2.12.1.deb
+
+#MySql
+RUN echo "mysql-server-5.7 mysql-server/root_password password ' '" | debconf-set-selections
+RUN echo "mysql-server-5.7 mysql-server/root_password_again password ' '" | debconf-set-selections
+RUN apt-get install mysql-server mysql-client -y
+
+
+#SBT
+RUN \
+	curl -L -o sbt-$SBT_VERSION.deb https://dl.bintray.com/sbt/debian/sbt-$SBT_VERSION.deb && \
+	dpkg -i sbt-$SBT_VERSION.deb && \
+	rm sbt-$SBT_VERSION.deb && \
+	apt-get update && \
+	apt-get install sbt && \
+	sbt sbtVersion
+
+
+#Slick - Play
+WORKDIR /home/
+RUN git clone https://github.com/playframework/play-scala-slick-example.git
+
+RUN service mysql start
+
+EXPOSE 9000
+#calling - docker run -it -p 9000:9000 <docker_file_name> /bin/bash
